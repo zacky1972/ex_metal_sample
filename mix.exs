@@ -49,7 +49,9 @@ defmodule ExMetalSample.MixProject do
         "README.md",
         "Makefile",
         "c_src/*.c",
-        "c_src/*.h"
+        "c_src/*.h",
+        "c_src/*.m",
+        "c_src/*.metal"
       ]
     ]
   end
