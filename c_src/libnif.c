@@ -1,12 +1,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 #include <erl_nif.h>
 
 #ifdef METAL
 #include "wrap_add.h"
-
-#define MAXBUFLEN 1024
 #endif
 
 static ERL_NIF_TERM init_metal_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
@@ -61,8 +60,13 @@ static ERL_NIF_TERM add_s32_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM arg
     int32_t *out = (int32_t *)out_data.data;
 
 #ifdef METAL
-    if(__builtin_expect(!add_s32_metal(in1, in2, out, vec_size), false)) {
-        return enif_raise_exception(env, enif_make_atom(env, "Metal Error"));
+    char error[MAXBUFLEN];
+    memset(error, 0, MAXBUFLEN);
+
+    if(__builtin_expect(!add_s32_metal(in1, in2, out, vec_size, error), false)) {
+        char ret_error[MAXBUFLEN];
+        snprintf(ret_error, MAXBUFLEN, "Metal Error: %s", error);
+        return enif_raise_exception(env, enif_make_string(env, ret_error, ERL_NIF_LATIN1));
     }
 #else
     for(ErlNifUInt64 i = 0; i < vec_size; i++) {
