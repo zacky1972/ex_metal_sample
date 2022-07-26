@@ -76,17 +76,4 @@ defmodule ExMetalSample do
 
   @doc false
   def add_s32_nif(_size, _shape, _binary1, _binary2), do: exit(:nif_not_loaded)
-
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> ExMetalSample.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
 end
