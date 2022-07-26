@@ -12,10 +12,6 @@ static ERL_NIF_TERM add_s32_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM arg
         return enif_make_badarg(env);
     }
 
-#ifdef METAL
-    caller();
-#endif
-
     ErlNifUInt64 vec_size;
     if(__builtin_expect(!enif_get_uint64(env, argv[0], &vec_size), false)) {
         return enif_make_badarg(env);
