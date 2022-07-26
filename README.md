@@ -1,6 +1,6 @@
 # ExMetalSample
 
-**TODO: Add description**
+A sample program that connects Elixir and Metal.
 
 ## Installation
 
