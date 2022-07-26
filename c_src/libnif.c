@@ -32,7 +32,7 @@ static ERL_NIF_TERM add_s32_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM arg
     int32_t *in2 = (int32_t *)in_data_2.data;
 
     ErlNifBinary out_data;
-    if(__builtin_expect(!enif_alloc_binary(vec_size * sizeof(uint32_t), &out_data), false)) {
+    if(__builtin_expect(!enif_alloc_binary(vec_size * sizeof(int32_t), &out_data), false)) {
         return enif_make_badarg(env);
     }
     int32_t *out = (int32_t *)out_data.data;
