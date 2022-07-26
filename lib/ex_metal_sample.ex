@@ -5,7 +5,15 @@ defmodule ExMetalSample do
   A sample program that connects Elixir and Metal.
   """
 
-  @on_load :load_nif
+  @on_load :init
+
+  @doc false
+  def init do
+    case load_nif() do
+      :ok -> init_metal()
+      _ -> :error
+    end
+  end
 
   @doc false
   def load_nif do
@@ -17,6 +25,14 @@ defmodule ExMetalSample do
       {:error, reason} -> Logger.error("Failed to load NIF: #{inspect(reason)}")
     end
   end
+
+  def init_metal() do
+    Application.app_dir(:ex_metal_sample, "priv/default.metallib")
+    |> String.to_charlist()
+    |> init_metal_nif()
+  end
+
+  def init_metal_nif(_default_metallib), do: exit(:nif_not_loaded)
 
   @doc """
   Add two tensors with signed 32bit integer.

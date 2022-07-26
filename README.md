@@ -2,6 +2,16 @@
 
 A sample program that connects Elixir and Metal.
 
+## Before compiling
+
+Run the following command and enter your password to be the superuser before executing this sample.
+
+```
+sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+```
+
+
+
 ## License
 
 Copyright (c) 2022 University of Kitakyushu
