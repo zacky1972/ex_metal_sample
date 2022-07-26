@@ -1,6 +1,6 @@
 defmodule ExMetalSample do
   @moduledoc """
-  Documentation for `ExMetalSample`.
+  A sample program that connects Elixir and Metal.
   """
 
   @doc """
