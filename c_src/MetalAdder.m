@@ -1,4 +1,6 @@
+#import <stdio.h>
 #import "MetalAdder.h"
+#import "wrap_add.h"
 
 @implementation MetalAdder
 {
@@ -17,7 +19,7 @@
 
 }
 
-- (instancetype) initWithDevice: (id<MTLDevice>) device
+- (instancetype) initWithDevice: (id<MTLDevice>) device error:(char*)error_message
 {
     self = [super init];
     if (self)
@@ -28,20 +30,21 @@
 
         if (libraryFile == nil)
         {
+            snprintf(error_message, MAXBUFLEN, "libraryFile must be not nil");
             return nil;
         }
 
         id <MTLLibrary> defaultLibrary = [_mDevice newLibraryWithURL:[NSURL fileURLWithPath:libraryFile] error: &error];
         if (defaultLibrary == nil)
         {
-            // NSLog(@"Failed to find the default library. %@", [NSURL fileURLWithPath:libraryFile]);
+            snprintf(error_message, MAXBUFLEN, "Failed to find the default library:%s", [libraryFile UTF8String]);
             return nil;
         }
 
         id<MTLFunction> addFunction = [defaultLibrary newFunctionWithName:@"add_arrays"];
         if (addFunction == nil)
         {
-            // NSLog(@"Failed to find the adder function.");
+            snprintf(error_message, MAXBUFLEN, "Failed to find the adder function.");
             return nil;
         }
 
@@ -52,14 +55,14 @@
             //  If the Metal API validation is enabled, you can find out more information about what
             //  went wrong.  (Metal API validation is enabled by default when a debug build is run
             //  from Xcode)
-            // NSLog(@"Failed to created pipeline state object, error %@.", error);
+            snprintf(error_message, MAXBUFLEN, "Failed to created pipeline state object, error: %s", [[error description] UTF8String]);
             return nil;
         }
 
         _mCommandQueue = [_mDevice newCommandQueue];
         if (_mCommandQueue == nil)
         {
-            // NSLog(@"Failed to find the command queue.");
+            snprintf(error_message, MAXBUFLEN, "Failed to find the command queue.");
             return nil;
         }
     }
@@ -67,7 +70,7 @@
     return self;
 }
 
-- (void) prepareData: (const int32_t *)inA inB: (const int32_t *)inB size: (size_t)vec_size
+- (void) prepareData: (const int32_t *)inA inB: (const int32_t *)inB size: (size_t)vec_size error: error_message
 {
     // Allocate three buffers to hold our initial data and the result.
     size_t bufferSize = sizeof(int32_t) * vec_size;
@@ -75,21 +78,29 @@
     _mBufferB = [_mDevice newBufferWithLength:bufferSize options:MTLResourceStorageModeShared];
     _mBufferResult = [_mDevice newBufferWithLength:bufferSize options:MTLResourceStorageModeShared];
 
-    [self generateData:_mBufferA in:inA size: vec_size];
-    [self generateData:_mBufferB in:inB size: vec_size];
+    if(_mBufferA == nil || _mBufferB == nil || _mBufferResult == nil) {
+        snprintf(error_message, MAXBUFLEN, "Failed to create data buffer.");
+    }
+
+    [self generateData:_mBufferA in:inA size: vec_size error:error_message];
+    [self generateData:_mBufferB in:inB size: vec_size error:error_message];
 }
 
-- (int32_t*) sendComputeCommand: (size_t)vec_size
+- (int32_t*) sendComputeCommand: (size_t)vec_size error: (char*)error_message
 {
     // Create a command buffer to hold commands.
     id<MTLCommandBuffer> commandBuffer = [_mCommandQueue commandBuffer];
-    assert(commandBuffer != nil);
+    if(commandBuffer != nil) {
+        snprintf(error_message, MAXBUFLEN, "Failed to create command buffer.");
+    }
 
     // Start a compute pass.
     id<MTLComputeCommandEncoder> computeEncoder = [commandBuffer computeCommandEncoder];
-    assert(computeEncoder != nil);
+    if(computeEncoder != nil) {
+        snprintf(error_message, MAXBUFLEN, "Failed to create compute encoder.");
+    }
 
-    [self encodeAddCommand:computeEncoder size: vec_size];
+    [self encodeAddCommand:computeEncoder size: vec_size error:error_message];
 
     // End the compute pass.
     [computeEncoder endEncoding];
@@ -104,8 +115,8 @@
     return _mBufferResult.contents;
 }
 
-- (void)encodeAddCommand:(id<MTLComputeCommandEncoder>)computeEncoder size: (size_t)vec_size {
-
+- (void)encodeAddCommand:(id<MTLComputeCommandEncoder>)computeEncoder size: (size_t)vec_size error: (char*) error_message 
+{
     // Encode the pipeline state object and its parameters.
     [computeEncoder setComputePipelineState:_mAddFunctionPSO];
     [computeEncoder setBuffer:_mBufferA offset:0 atIndex:0];
@@ -127,7 +138,7 @@
               threadsPerThreadgroup:threadgroupSize];
 }
 
-- (void) generateData: (id<MTLBuffer>) buffer in: (const int32_t *) in size: (size_t)vec_size
+- (void) generateData: (id<MTLBuffer>) buffer in: (const int32_t *) in size:(size_t)vec_size error:(char*)error_message
 {
     int32_t* dataPtr = buffer.contents;
 
