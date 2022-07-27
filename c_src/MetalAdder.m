@@ -30,14 +30,20 @@
 
         if (libraryFile == nil)
         {
-            snprintf(error_message, MAXBUFLEN, "libraryFile must be not nil");
+            snprintf(error_message, MAXBUFLEN, "libraryFile must be not nil.");
             return nil;
         }
 
-        id <MTLLibrary> defaultLibrary = [_mDevice newLibraryWithURL:[NSURL fileURLWithPath:libraryFile] error: &error];
-        if (defaultLibrary == nil)
+        NSURL* url = [NSURL fileURLWithPath:libraryFile];
+        if(url == nil) {
+            snprintf(error_message, MAXBUFLEN, "Fail to convert URL: %s", [libraryFile UTF8String]);
+            return nil;
+        }
+
+        id <MTLLibrary> defaultLibrary = [_mDevice newLibraryWithURL:url error: &error];
+        if (defaultLibrary == nil || error != nil)
         {
-            snprintf(error_message, MAXBUFLEN, "Failed to find the default library:%s", [libraryFile UTF8String]);
+            snprintf(error_message, MAXBUFLEN, "Failed to find the default library: %s", [libraryFile UTF8String]);
             return nil;
         }
 
@@ -49,8 +55,8 @@
         }
 
         // Create a compute pipeline state object.
-        _mAddFunctionPSO = [_mDevice newComputePipelineStateWithFunction: addFunction error:&error];
-        if (_mAddFunctionPSO == nil)
+        _mAddFunctionPSO = [_mDevice newComputePipelineStateWithFunction:addFunction error:&error];
+        if (_mAddFunctionPSO == nil || error != nil)
         {
             //  If the Metal API validation is enabled, you can find out more information about what
             //  went wrong.  (Metal API validation is enabled by default when a debug build is run
@@ -70,7 +76,7 @@
     return self;
 }
 
-- (void) prepareData: (const int32_t *)inA inB: (const int32_t *)inB size: (size_t)vec_size error: error_message
+- (bool)prepareData:(const int32_t *)inA inB:(const int32_t *)inB size:(size_t)vec_size error:(char*)error_message
 {
     // Allocate three buffers to hold our initial data and the result.
     size_t bufferSize = sizeof(int32_t) * vec_size;
@@ -80,27 +86,35 @@
 
     if(_mBufferA == nil || _mBufferB == nil || _mBufferResult == nil) {
         snprintf(error_message, MAXBUFLEN, "Failed to create data buffer.");
+        return false;
     }
 
-    [self generateData:_mBufferA in:inA size: vec_size error:error_message];
-    [self generateData:_mBufferB in:inB size: vec_size error:error_message];
+    if(!([self generateData:_mBufferA in:inA size: vec_size error:error_message]
+        && [self generateData:_mBufferB in:inB size: vec_size error:error_message])) {
+        return false;
+    }
+    return true;
 }
 
 - (int32_t*) sendComputeCommand: (size_t)vec_size error: (char*)error_message
 {
     // Create a command buffer to hold commands.
     id<MTLCommandBuffer> commandBuffer = [_mCommandQueue commandBuffer];
-    if(commandBuffer != nil) {
+    if(commandBuffer == nil) {
         snprintf(error_message, MAXBUFLEN, "Failed to create command buffer.");
+        return nil;
     }
 
     // Start a compute pass.
     id<MTLComputeCommandEncoder> computeEncoder = [commandBuffer computeCommandEncoder];
-    if(computeEncoder != nil) {
+    if(computeEncoder == nil) {
         snprintf(error_message, MAXBUFLEN, "Failed to create compute encoder.");
+        return nil;
     }
 
-    [self encodeAddCommand:computeEncoder size: vec_size error:error_message];
+    if(![self encodeAddCommand:computeEncoder size: vec_size error:error_message]) {
+        return nil;
+    }
 
     // End the compute pass.
     [computeEncoder endEncoding];
@@ -112,12 +126,33 @@
     // but in this example, the code simply blocks until the calculation is complete.
     [commandBuffer waitUntilCompleted];
 
+    if(_mBufferResult == nil) {
+        snprintf(error_message, MAXBUFLEN, "_mBufferResult must not be nil.");
+        return nil;
+    }
+
     return _mBufferResult.contents;
 }
 
-- (void)encodeAddCommand:(id<MTLComputeCommandEncoder>)computeEncoder size: (size_t)vec_size error: (char*) error_message 
+- (bool)encodeAddCommand:(id<MTLComputeCommandEncoder>)computeEncoder size: (size_t)vec_size error: (char*) error_message 
 {
     // Encode the pipeline state object and its parameters.
+    if(_mAddFunctionPSO == nil) {
+        snprintf(error_message, MAXBUFLEN, "_mAddFunctionPS0 must not be nil.");
+        return false;
+    }
+    if(_mBufferA == nil) {
+        snprintf(error_message, MAXBUFLEN, "_mBufferA must not be nil.");
+        return false;
+    }
+    if(_mBufferB == nil) {
+        snprintf(error_message, MAXBUFLEN, "_mBufferB must not be nil.");
+        return false;
+    }
+    if(_mBufferResult == nil) {
+        snprintf(error_message, MAXBUFLEN, "_mBufferResult must not be nil.");
+        return false;
+    }
     [computeEncoder setComputePipelineState:_mAddFunctionPSO];
     [computeEncoder setBuffer:_mBufferA offset:0 atIndex:0];
     [computeEncoder setBuffer:_mBufferB offset:0 atIndex:1];
@@ -136,15 +171,31 @@
     // Encode the compute command.
     [computeEncoder dispatchThreads:gridSize
               threadsPerThreadgroup:threadgroupSize];
+    return true;
 }
 
-- (void) generateData: (id<MTLBuffer>) buffer in: (const int32_t *) in size:(size_t)vec_size error:(char*)error_message
+- (bool) generateData:(id<MTLBuffer>)buffer in: (const int32_t *) in size:(size_t)vec_size error:(char*)error_message
 {
+    if(buffer == nil) {
+        snprintf(error_message, MAXBUFLEN, "buffer must not be nil.");
+        return false;
+    }
+
     int32_t* dataPtr = buffer.contents;
+    if(dataPtr == nil) {
+        snprintf(error_message, MAXBUFLEN, "Fail to get buffer.contents.");
+        return false;
+    }
+
+    if(in == nil) {
+        snprintf(error_message, MAXBUFLEN, "in must not be nil");
+        return false;
+    }
 
     for (size_t index = 0; index < vec_size; index++)
     {
         dataPtr[index] = in[index];
     }
+    return true;
 }
 @end

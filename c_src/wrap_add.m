@@ -31,10 +31,15 @@ bool add_s32_metal(const int32_t *in1, const int32_t *in2, int32_t *out, uint64_
         }
 
         // Create buffers to hold data
-        [adder prepareData:in1 inB:in2 size:vec_size error:error];
+       if(![adder prepareData:in1 inB:in2 size:vec_size error:error]) {
+            return false;
+       }
         
         // Send a command to the GPU to perform the calculation.
         int32_t *result = [adder sendComputeCommand:vec_size error:error];
+        if(result == nil) {
+            return false;
+        }
         memcpy(out, result, vec_size * sizeof(int32_t));
     }
     return true;
