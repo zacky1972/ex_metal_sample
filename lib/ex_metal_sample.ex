@@ -26,12 +26,14 @@ defmodule ExMetalSample do
     end
   end
 
+  @doc false
   def init_metal() do
     Application.app_dir(:ex_metal_sample, "priv/default.metallib")
     |> String.to_charlist()
     |> init_metal_nif()
   end
 
+  @doc false
   def init_metal_nif(_default_metallib), do: exit(:nif_not_loaded)
 
   @doc """
