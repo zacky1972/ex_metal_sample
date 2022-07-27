@@ -131,6 +131,10 @@
         return nil;
     }
 
+    if(_mBufferResult.contents == nil) {
+        snprintf(error_message, MAXBUFLEN, "_mBufferResult.contents must not be nil.");
+        return nil;
+    }
     return _mBufferResult.contents;
 }
 
