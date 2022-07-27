@@ -60,12 +60,13 @@ static ERL_NIF_TERM add_s32_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM arg
     int32_t *out = (int32_t *)out_data.data;
 
 #ifdef METAL
-    char error[MAXBUFLEN];
-    memset(error, 0, MAXBUFLEN);
+    const char *metal_error = "Metal Error: ";
+    char error[MAXBUFLEN - strlen(metal_error)];
+    memset(error, 0, MAXBUFLEN - strlen(metal_error));
 
     if(__builtin_expect(!add_s32_metal(in1, in2, out, vec_size, error), false)) {
         char ret_error[MAXBUFLEN];
-        snprintf(ret_error, MAXBUFLEN, "Metal Error: %s", error);
+        snprintf(ret_error, MAXBUFLEN, "%s%s", metal_error, error);
         return enif_raise_exception(env, enif_make_string(env, ret_error, ERL_NIF_LATIN1));
     }
 #else
