@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <erl_nif.h>
 
+#include <stdio.h>
+
 #ifdef METAL
 #include "wrap_add.h"
 #endif
@@ -13,19 +15,36 @@ static ERL_NIF_TERM init_metal_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM 
     if(__builtin_expect(argc != 1, false)) {
         return enif_make_badarg(env);
     }
-    bool ret = true;
 #ifdef METAL
-    char default_metallib[MAXBUFLEN];
-    if(__builtin_expect(!enif_get_string(env, argv[0], default_metallib, MAXBUFLEN, ERL_NIF_LATIN1), false)) {
+    bool ret = true;
+    const char *metal_error = "Metal Error: ";
+    char error[MAXBUFLEN];
+    memset(error, 0, MAXBUFLEN);
+
+    unsigned len;
+    if(__builtin_expect(!enif_get_list_length(env, argv[0], &len), false)) {
         return enif_make_badarg(env);
     }
-    ret = init_metal(default_metallib);
-#endif
+    char *metal_src = enif_alloc(len);
+    if(__builtin_expect(metal_src == NULL, false)) {
+        return enif_make_badarg(env);
+    }
+    if(__builtin_expect(!enif_get_string(env, argv[0], metal_src, len, ERL_NIF_LATIN1), false)) {
+        return enif_make_badarg(env);
+    }
+    ret = init_metal(metal_src, error);
+    enif_free(metal_src);
     if(ret) {
         return enif_make_atom(env, "ok");
     } else {
-        return enif_make_atom(env, "error");
+        char ret_error[MAXBUFLEN + strlen(metal_error)];
+        memset(ret_error, 0, MAXBUFLEN + strlen(metal_error));
+        snprintf(ret_error, MAXBUFLEN + strlen(metal_error), "%s%s", metal_error, error);
+        return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_string(env, ret_error, ERL_NIF_LATIN1));
     }
+#else
+    return enif_make_atom(env, "ok");
+#endif
 }
 
 static ERL_NIF_TERM add_s32_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])

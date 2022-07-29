@@ -3,7 +3,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString *libraryFile;
+id<MTLLibrary> addLibrary;
 
 @interface MetalAdder : NSObject 
 - (instancetype) initWithDevice: (id<MTLDevice>) device error:(char*)error;
