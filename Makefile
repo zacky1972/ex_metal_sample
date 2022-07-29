@@ -42,14 +42,8 @@ C_SRC = c_src/libnif.c
 C_OBJ = $(C_SRC:c_src/%.c=$(BUILD)/%.o)
 OC_SRC = c_src/wrap_add.m c_src/MetalAdder.m
 OC_OBJ = $(OC_SRC:c_src/%.m=$(BUILD)/%.o)
-MTL_SRC = c_src/add.metal
-MTL_OBJ = $(MTL_SRC:c_src/%.metal=$(BUILD)/%.air)
 
-ifeq ($(shell uname -s),Darwin)
-all: $(PRIV) $(BUILD) $(NIF) $(MLIB)
-else
 all: $(PRIV) $(BUILD) $(NIF)
-endif
 
 $(PRIV) $(BUILD):
 	mkdir -p $@
@@ -62,14 +56,6 @@ ifeq ($(shell uname -s),Darwin)
 $(BUILD)/%.o: c_src/%.m
 	@echo " CLANG $(notdir $@)"
 	xcrun clang -c $(OBJC_FLAGS) $(CFLAGS) -o $@ $<
-
-$(BUILD)/%.air: c_src/%.metal
-	@echo " metal $(notdir $@)"
-	xcrun -sdk macosx metal -c $< -o $@
-
-$(MLIB): $(MTL_OBJ)
-	@echo " metallib $(notdir $@)"
-	xcrun -sdk macosx metallib $< -o $@
 endif
 
 ifeq ($(shell uname -s),Darwin)

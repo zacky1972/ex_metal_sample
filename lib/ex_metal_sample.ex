@@ -10,8 +10,13 @@ defmodule ExMetalSample do
   @doc false
   def init do
     case load_nif() do
-      :ok -> init_metal()
-      _ -> :error
+      :ok ->
+        case init_metal("c_src/add.metal") do
+          :ok -> :ok
+          {:error, char_list} -> {:error, List.to_string(char_list)}
+        end
+
+        _ -> :error
     end
   end
 
@@ -27,8 +32,9 @@ defmodule ExMetalSample do
   end
 
   @doc false
-  def init_metal() do
-    Application.app_dir(:ex_metal_sample, "priv/default.metallib")
+  def init_metal(metal_src) do
+    metal_src
+    |> File.read!()
     |> String.to_charlist()
     |> init_metal_nif()
   end

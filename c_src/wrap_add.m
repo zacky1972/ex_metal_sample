@@ -5,9 +5,29 @@
 #import "MetalAdder.h"
 #import "wrap_add.h"
 
-bool init_metal(const char *default_library_path)
+bool init_metal(const char *metal_src, char *error_message)
 {
-    libraryFile = [NSString stringWithCString:default_library_path encoding:NSUTF8StringEncoding];
+    @autoreleasepool {
+        id<MTLDevice> device = MTLCreateSystemDefaultDevice();
+        if(device == nil) {
+            snprintf(error_message, MAXBUFLEN, "Device not found");
+            return false;
+        }
+
+        NSError* error = nil;
+
+        NSString *src = [NSString stringWithCString:metal_src encoding:NSUTF8StringEncoding];
+
+        MTLCompileOptions* options = [MTLCompileOptions new];
+        options.languageVersion = MTLLanguageVersion2_4;
+        // opitons.optimizationLevel = MTLLibraryOptimizationLevelDefault
+
+        addLibrary = [device newLibraryWithSource:src options:options error:&error];
+        if(addLibrary == nil || error != nil) {
+            snprintf(error_message, MAXBUFLEN, "Fail to create new library from source.");
+            return false;
+        }
+    }
     return true;
 }
 

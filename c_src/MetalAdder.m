@@ -28,26 +28,13 @@
 
         NSError* error = nil;
 
-        if (libraryFile == nil)
+        if (addLibrary == nil)
         {
-            snprintf(error_message, MAXBUFLEN, "libraryFile must be not nil.");
+            snprintf(error_message, MAXBUFLEN, "addLibrary must be not nil.");
             return nil;
         }
 
-        NSURL* url = [NSURL fileURLWithPath:libraryFile];
-        if(url == nil) {
-            snprintf(error_message, MAXBUFLEN, "Fail to convert URL: %s", [libraryFile UTF8String]);
-            return nil;
-        }
-
-        id <MTLLibrary> defaultLibrary = [_mDevice newLibraryWithURL:url error: &error];
-        if (defaultLibrary == nil || error != nil)
-        {
-            snprintf(error_message, MAXBUFLEN, "Failed to find the default library: %s", [libraryFile UTF8String]);
-            return nil;
-        }
-
-        id<MTLFunction> addFunction = [defaultLibrary newFunctionWithName:@"add_arrays"];
+        id<MTLFunction> addFunction = [addLibrary newFunctionWithName:@"add_arrays"];
         if (addFunction == nil)
         {
             snprintf(error_message, MAXBUFLEN, "Failed to find the adder function.");
