@@ -16,7 +16,8 @@ defmodule ExMetalSample do
           {:error, char_list} -> {:error, List.to_string(char_list)}
         end
 
-        _ -> :error
+      _ ->
+        :error
     end
   end
 
@@ -78,9 +79,13 @@ defmodule ExMetalSample do
 
   defp add_sub(x, y, type) do
     if Nx.shape(x) == Nx.shape(y) do
-      Nx.from_binary(add_sub_sub(Nx.size(x), Nx.shape(x), Nx.to_binary(x), Nx.to_binary(y), type), type)
+      Nx.from_binary(
+        add_sub_sub(Nx.size(x), Nx.shape(x), Nx.to_binary(x), Nx.to_binary(y), type),
+        type
+      )
     else
-      raise RuntimeError, "shape is not much add(#{inspect Nx.shape(x)}, #{inspect Nx.shape(y)})"
+      raise RuntimeError,
+            "shape is not much add(#{inspect(Nx.shape(x))}, #{inspect(Nx.shape(y))})"
     end
   end
 
