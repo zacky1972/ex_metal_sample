@@ -7,9 +7,6 @@ MLIB = $(PRIV)/default.metallib
 
 ifeq ($(shell uname -s),Darwin)
 CFLAGS += -DMETAL
-ifneq ($(shell xcrun metal --version 2>&1 |grep error),)
-$(error Please run "sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer")
-endif
 endif
 
 ifeq ($(CROSSCOMPILE),)
