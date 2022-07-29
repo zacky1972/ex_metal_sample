@@ -85,6 +85,7 @@ static ERL_NIF_TERM add_s32_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM arg
 
     if(__builtin_expect(!add_s32_metal(in1, in2, out, vec_size, error), false)) {
         char ret_error[MAXBUFLEN + strlen(metal_error)];
+        memset(ret_error, 0, MAXBUFLEN + strlen(metal_error));
         snprintf(ret_error, MAXBUFLEN + strlen(metal_error), "%s%s", metal_error, error);
         return enif_raise_exception(env, enif_make_string(env, ret_error, ERL_NIF_LATIN1));
     }
