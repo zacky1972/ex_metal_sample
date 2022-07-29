@@ -20,7 +20,6 @@ bool init_metal(const char *metal_src, char *error_message)
 
         MTLCompileOptions* options = [MTLCompileOptions new];
         options.languageVersion = MTLLanguageVersion2_4;
-        // opitons.optimizationLevel = MTLLibraryOptimizationLevelDefault
 
         addLibrary = [device newLibraryWithSource:src options:options error:&error];
         if(addLibrary == nil || error != nil) {
