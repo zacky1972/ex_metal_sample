@@ -23,7 +23,7 @@ defmodule ExMetalSample do
 
   @doc false
   def load_nif do
-    nif_file = '#{Application.app_dir(:ex_metal_sample, "priv/libnif")}'
+    nif_file = ~c'#{Application.app_dir(:ex_metal_sample, "priv/libnif")}'
 
     case :erlang.load_nif(nif_file, 0) do
       :ok -> :ok
