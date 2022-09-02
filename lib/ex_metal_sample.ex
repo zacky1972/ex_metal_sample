@@ -15,9 +15,6 @@ defmodule ExMetalSample do
           :ok -> :ok
           {:error, char_list} -> {:error, List.to_string(char_list)}
         end
-
-      _ ->
-        :error
     end
   end
 
@@ -28,7 +25,10 @@ defmodule ExMetalSample do
     case :erlang.load_nif(nif_file, 0) do
       :ok -> :ok
       {:error, {:reload, _}} -> :ok
-      {:error, reason} -> Logger.error("Failed to load NIF: #{inspect(reason)}")
+
+      {:error, reason} ->
+        Logger.error("Failed to load NIF: #{inspect(reason)}")
+        :ok
     end
   end
 
@@ -41,7 +41,7 @@ defmodule ExMetalSample do
   end
 
   @doc false
-  def init_metal_nif(_default_metallib), do: exit(:nif_not_loaded)
+  def init_metal_nif(_default_metallib), do: :erlang.nif_error(:not_loaded)
 
   @doc """
   Add two tensors with signed 32bit integer.
@@ -98,5 +98,5 @@ defmodule ExMetalSample do
   end
 
   @doc false
-  def add_s32_nif(_size, _shape, _binary1, _binary2), do: exit(:nif_not_loaded)
+  def add_s32_nif(_size, _shape, _binary1, _binary2), do: :erlang.nif_error(:not_loaded)
 end
