@@ -36,6 +36,7 @@ defmodule ExMetalSample.MixProject do
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
       {:ex_doc, "~> 0.28", only: :dev, runtime: false},
       {:elixir_make, "~> 0.6", runtime: false},
+      {:dialyxir, "~> 1.2", only: [:dev], runtime: false},
       {:nx, "~> 0.3"}
     ]
   end
